@@ -27,11 +27,8 @@ class TokenHealer:
         return removed_toks
 
     def trim_falsy_toks(self, prompt_toks):
-        r_prompt_toks = prompt_toks[::-1]
-        last_truthy_tok = next(filter(None, r_prompt_toks))
-        p_toks = prompt_toks[: -r_prompt_toks.index(last_truthy_tok) or None]
-        return p_toks
-
+        truthy_idx = next(i for i, t in enumerate(reversed(prompt_toks)) if t)
+        return prompt_toks[: -truthy_idx or None]
 # TODO: use `candidate_tokens` to cache the vocab indices to mask logits with.
 # see if the mode's generatefunction has a logits_mask function, otherwise check outlines impl
 # TODO: add type hinting
