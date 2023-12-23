@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "token-healing"
+version = "0.1.0"
+description = ""
+authors = ["Ahmed Moubtahij"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "token_healing"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+outlines = "^0.0.19"
+
+[tool.poetry.group.test.dependencies]
+autoawq = "^0.1.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
