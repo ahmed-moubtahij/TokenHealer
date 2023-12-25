@@ -4,7 +4,7 @@ from token_healing import TokenHealer
 model = outlines.models.awq("TheBloke/SOLAR-10.7B-Instruct-v1.0-uncensored-AWQ")
 token_healer = TokenHealer(model, model.tokenizer.tokenizer)
 # max_tokens = 50
-# TODO: find a better demonstrative prompt
+# TODO: find better demonstrative prompts
 prompt = "What is the IP address of the Google DNS servers ? ! "
 # unguided = outlines.generate.text(model, max_tokens=max_tokens)(prompt)
 # print(f"\nUNGUIDED:\n{unguided}\n")
