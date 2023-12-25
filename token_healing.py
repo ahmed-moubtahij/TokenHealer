@@ -4,8 +4,7 @@
 # the prompt tokens and let the model re-write them from its own vocab.
 from typing import Protocol
 from re import escape
-from outlines.generate.samplers import samplers
-from outlines.generate.api import regex as rgx_gen
+from outlines.generate import samplers, regex as rgx_gen
 
 class Tokenizer(Protocol):
     def __call__(self, s: str) -> dict[str, list[int]]: ...
@@ -44,5 +43,6 @@ class TokenHealer:
         return prompt_toks[: -truthy_idx or None]
 
 # TODO: use `candidate_tokens` to cache the vocab indices to mask logits with.
-# see if the mode's generatefunction has a logits_mask function, otherwise check outlines impl
+# TODO: see if the mode's generatefunction has a logits_mask function, otherwise check outlines impl
 # TODO: Can the outlines logic be inlined and the dependency removed?
+# TODO: Important because you're forcing the user to wrap their model in it

@@ -12,7 +12,8 @@ python = "^3.10"
 outlines = "^0.0.19"
 
 [tool.poetry.group.test.dependencies]
-autoawq = "^0.1.7"
+auto-gptq = "^0.6.0"
+protobuf = "^4.25.1"
 
 
 [tool.poetry.group.dev.dependencies]
