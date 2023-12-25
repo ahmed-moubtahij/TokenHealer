@@ -14,6 +14,22 @@ outlines = "^0.0.19"
 [tool.poetry.group.test.dependencies]
 autoawq = "^0.1.7"
 
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+pylint = "^3.0.3"
+pyright = "^1.1.342"
+
+[tool.pylint]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+]
+
+[tool.pyright]
+ignore = ["example.py"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

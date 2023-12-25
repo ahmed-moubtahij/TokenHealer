@@ -1,14 +1,16 @@
 # https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38
-# Due to greedy tokenization, the last prompt token harms generation when it prefixes better candidates in the model's vocab.
-# So we could trim the prompt tokens and let the model re-write them from its own vocab.
+# Due to greedy tokenization, the last prompt token harms generation when
+# it prefixes better candidates in the model's vocab. So we could trim
+# the prompt tokens and let the model re-write them from its own vocab.
 from typing import Protocol
-from outlines.generate import regex as rgx_gen
-from outlines.generate.samplers import greedy
 from re import escape
+from outlines.generate.samplers import samplers
+from outlines.generate.api import regex as rgx_gen
 
 class Tokenizer(Protocol):
     def __call__(self, s: str) -> dict[str, list[int]]: ...
-    def decode(self, id: int|list[int]) -> str: ...
+    def decode(self, i: int|list[int]) -> str: ...
+    def get_vocab(self) -> dict[str, int]: ...
 
 class TokenHealer:
     def __init__(self, model, tokenizer: Tokenizer):
@@ -23,14 +25,16 @@ class TokenHealer:
             prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
             for t in removed_toks:
                 prompt += rgx_gen(
-                    self.model, f"{escape(t)}.*", max_tokens=1, sampler=greedy
+                    self.model, f"{escape(t)}.*", max_tokens=1,
+                    sampler=samplers.greedy # type: ignore[arg-type]
                 )(prompt)
         return prompt
         # NOTE: pattern should be "^{t}.*" but outlines.interegular doesn't support `^`
         # https://discord.com/channels/1182316225284554793/1182317824170020895/1188172732735701123
 
     def trim_toks(self, prompt_toks: list[str]) -> list[str]:
-        p_toks, removed_toks = self.trim_falsy_toks(prompt_toks), []
+        p_toks = self.trim_falsy_toks(prompt_toks)
+        removed_toks: list[str] = []
         while len([t for t in self.vocab if t.startswith(p_toks[-1])]) > 1:
             removed_toks.insert(0, p_toks.pop())
         return removed_toks
