@@ -8,7 +8,7 @@ from outlines.generate import samplers, regex as rgx_gen
 
 class Tokenizer(Protocol):
     def __call__(self, s: str) -> dict[str, list[int]]: ...
-    def decode(self, i: int|list[int]) -> str: ...
+    def batch_decode(self, ids: list[int]) -> list[str]: ...
     def get_vocab(self) -> dict[str, int]: ...
 
 class TokenHealer:
@@ -17,9 +17,7 @@ class TokenHealer:
         self.vocab = tokenizer.get_vocab()
 
     def __call__(self, prompt: str) -> str:
-        prompt_toks = [*map(
-            self.tokenizer.decode, self.tokenizer(prompt)['input_ids']
-        )]
+        prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt).input_ids)
         if removed_toks := self.trim_toks(prompt_toks):
             prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
             for t in removed_toks:
@@ -35,14 +33,17 @@ class TokenHealer:
         p_toks = self.trim_falsy_toks(prompt_toks)
         removed_toks: list[str] = []
         while len([t for t in self.vocab if t.startswith(p_toks[-1])]) > 1:
-            removed_toks.insert(0, p_toks.pop())
+            removed_toks.insert(0, p_toks.pop()) # NOTE: async mask logits for popped token?
         return removed_toks
 
     def trim_falsy_toks(self, prompt_toks: list[str]) -> list[str]:
         truthy_idx = next(i for i, t in enumerate(reversed(prompt_toks)) if t)
         return prompt_toks[: -truthy_idx or None]
 
+# TODO: check if `GenerationConfig` params can help control generation instead of using outlines
+# https://huggingface.co/docs/transformers/main_classes/text_generation#transformers.GenerationConfig.suppress_tokens
 # TODO: use `candidate_tokens` to cache the vocab indices to mask logits with.
-# TODO: see if the mode's generatefunction has a logits_mask function, otherwise check outlines impl
+# TODO: see if the model's generate function has a logits_mask function,
+# TODO: otherwise check outlines impl.
 # TODO: Can the outlines logic be inlined and the dependency removed?
 # TODO: Important because you're forcing the user to wrap their model in it

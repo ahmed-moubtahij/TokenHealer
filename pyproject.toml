@@ -21,15 +21,21 @@ mypy = "^1.8.0"
 pylint = "^3.0.3"
 pyright = "^1.1.342"
 
+[[tool.mypy.overrides]]
+module = "outlines"
+ignore_errors = true
+
 [tool.pylint]
 disable = [
     "missing-module-docstring",
     "missing-class-docstring",
     "missing-function-docstring",
+    "invalid-name",
 ]
 
 [tool.pyright]
 ignore = ["example.py"]
+reportPrivateImportUsage = false
 
 [build-system]
 requires = ["poetry-core"]
