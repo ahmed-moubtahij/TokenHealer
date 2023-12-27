@@ -11,18 +11,30 @@ class Tokenizer(Protocol):
     def batch_decode(self, ids: list[int]) -> list[str]: ...
     def get_vocab(self) -> dict[str, int]: ...
 
-class TokenHealer:
+class TokenBoundaryHealer:
     def __init__(self, model, tokenizer: Tokenizer):
         self.model, self.tokenizer = model, tokenizer
         self.vocab = tokenizer.get_vocab()
+        # self.vocab_bias = {(t,): -inf for t in tokenizer.get_vocab()}
 
     def __call__(self, prompt: str) -> str:
         prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt).input_ids)
         if removed_toks := self.trim_toks(prompt_toks):
             prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
-            for t in removed_toks:
+            for prefix in removed_toks:
+                # toks_to_suppress = [i for i, t in self.vocab.items() if not t.startswith(prefix)]
+                # model.greedy_search(generation_config=GenerationConfig(..., suppress_tokens=toks_to_suppress))
+                # OR
+                # https://huggingface.co/docs/transformers/main/en/internal/generation_utils#transformers.SequenceBiasLogitsProcessor
+                # self.vocab_bias[prefix] = 100
+                # model.greedy_search(generation_config=GenerationConfig(..., sequence_bias=self.vocab_bias))
+                # self.vocab_bias[prefix] = -inf
+                # OR
+                # https://huggingface.co/docs/transformers/main_classes/text_generation#transformers.GenerationMixin.greedy_search.example
+                # logits_processor = SuppressTokensLogitsProcessor
+                # model.greedy_search(input_ids, GenerationConfig(..., logits_processor=logits_processor))
                 prompt += rgx_gen(
-                    self.model, f"{escape(t)}.*", max_tokens=1,
+                    self.model, f"{escape(prefix)}.*", max_tokens=1,
                     sampler=samplers.greedy # type: ignore[arg-type]
                 )(prompt)
         return prompt
