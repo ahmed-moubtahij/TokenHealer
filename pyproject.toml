@@ -10,6 +10,7 @@ packages = [{include = "token_healing"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 outlines = "^0.0.19"
+pygtrie = "^2.5.0"
 
 [tool.poetry.group.test.dependencies]
 auto-gptq = "^0.6.0"

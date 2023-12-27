@@ -4,7 +4,9 @@
 # the prompt tokens and let the model re-write them from its own vocab.
 from typing import Protocol
 from re import escape
+
 from outlines.generate import samplers, regex as rgx_gen
+from pygtrie import CharTrie
 
 class Tokenizer(Protocol):
     def __call__(self, s: str) -> dict[str, list[int]]: ...
@@ -14,7 +16,7 @@ class Tokenizer(Protocol):
 class TokenBoundaryHealer:
     def __init__(self, model, tokenizer: Tokenizer):
         self.model, self.tokenizer = model, tokenizer
-        self.vocab = tokenizer.get_vocab()
+        self.vocab_trie = CharTrie(tokenizer.get_vocab())
         # self.vocab_bias = {(t,): -inf for t in tokenizer.get_vocab()}
 
     def __call__(self, prompt: str) -> str:
@@ -44,7 +46,7 @@ class TokenBoundaryHealer:
     def trim_toks(self, prompt_toks: list[str]) -> list[str]:
         p_toks = self.trim_falsy_toks(prompt_toks)
         removed_toks: list[str] = []
-        while len([t for t in self.vocab if t.startswith(p_toks[-1])]) > 1:
+        while len(self.vocab_trie.items(prefix=p_toks[-1])) > 1:
             removed_toks.insert(0, p_toks.pop()) # NOTE: async mask logits for popped token?
         return removed_toks
 
