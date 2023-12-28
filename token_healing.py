@@ -5,6 +5,7 @@
 from typing import Protocol
 from re import escape
 
+
 from outlines.generate import samplers, regex as rgx_gen
 from pygtrie import CharTrie
 
@@ -13,7 +14,7 @@ class Tokenizer(Protocol):
     def batch_decode(self, ids: list[int]) -> list[str]: ...
     def get_vocab(self) -> dict[str, int]: ...
 
-class TokenHealer:
+class TokenBoundaryHealer:
     def __init__(self, model, tokenizer: Tokenizer):
         self.model, self.tokenizer = model, tokenizer
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
@@ -22,9 +23,20 @@ class TokenHealer:
         prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt).input_ids)
         if removed_toks := self.trim_toks(prompt_toks):
             prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
-            for t in removed_toks:
+            for prefix in removed_toks:
+                # toks_to_suppress = [i for i, t in self.vocab.items() if not t.startswith(prefix)]
+                # model.greedy_search(generation_config=GenerationConfig(..., suppress_tokens=toks_to_suppress))
+                # OR
+                # https://huggingface.co/docs/transformers/main/en/internal/generation_utils#transformers.SequenceBiasLogitsProcessor
+                # self.vocab_bias[prefix] = 100
+                # model.greedy_search(generation_config=GenerationConfig(..., sequence_bias=self.vocab_bias))
+                # self.vocab_bias[prefix] = -inf
+                # OR
+                # https://huggingface.co/docs/transformers/main_classes/text_generation#transformers.GenerationMixin.greedy_search.example
+                # logits_processor = SuppressTokensLogitsProcessor
+                # model.greedy_search(input_ids, GenerationConfig(..., logits_processor=logits_processor))
                 prompt += rgx_gen(
-                    self.model, f"{escape(t)}.*", max_tokens=1,
+                    self.model, f"{escape(prefix)}.*", max_tokens=1,
                     sampler=samplers.greedy # type: ignore[arg-type]
                 )(prompt)
         return prompt
@@ -35,7 +47,8 @@ class TokenHealer:
         p_toks = self.trim_falsy_toks(prompt_toks)
         removed_toks: list[str] = []
         while len(self.vocab_trie.items(prefix=p_toks[-1])) > 1:
-            removed_toks.insert(0, p_toks.pop()) # NOTE: async mask logits for popped token?
+            removed_toks.insert(0, p_toks.pop()) # NOTE: async masking of logit per popped token?
+        # NOTE: https://github.com/guidance-ai/guidance/blob/5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
         return removed_toks
 
     def trim_falsy_toks(self, prompt_toks: list[str]) -> list[str]:
