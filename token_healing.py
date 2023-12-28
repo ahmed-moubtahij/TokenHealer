@@ -1,10 +1,5 @@
-# https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38
-# Due to greedy tokenization, the last prompt token harms generation when
-# it prefixes better candidates in the model's vocab. So we could trim
-# the prompt tokens and let the model re-write them from its own vocab.
 from typing import Protocol
 from re import escape
-
 
 from outlines.generate import samplers, regex as rgx_gen
 from pygtrie import CharTrie
@@ -15,12 +10,17 @@ class Tokenizer(Protocol):
     def get_vocab(self) -> dict[str, int]: ...
 
 class TokenBoundaryHealer:
+    """
+    https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38
+    The last prompt token harms generation when it prefixes better candidates in the model's vocab.
+    So we trim the prompt tokens and let the model re-write them from its own vocab.
+    """
     def __init__(self, model, tokenizer: Tokenizer):
         self.model, self.tokenizer = model, tokenizer
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
-        prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt).input_ids)
+        prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt)['input_ids'])
         if removed_toks := self.trim_toks(prompt_toks):
             prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
             for prefix in removed_toks:
