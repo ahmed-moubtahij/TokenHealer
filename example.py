@@ -33,8 +33,15 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
-# TODO: better query tests
-query = "What is the IP address of the Google DNS servers ? ! "
+# test queries from
+# https://github.com/guidance-ai/guidance/blob/5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/notebooks/art_of_prompt_design/prompt_boundaries_and_token_healing.ipynb
+test_queries = [
+    "The link is <a href=\"http:",
+    "I read a book about ",
+    "I read a book about",
+    "An example [\"like this\"] and another example ["
+]
+query = test_queries[0]
 print(f"\nQUERY:\n{query}\n")
 
 # unguided_output = generate(query, model, tokenizer, heal_prompt=False)

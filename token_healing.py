@@ -47,7 +47,8 @@ class TokenBoundaryHealer:
         p_toks = self.trim_falsy_toks(prompt_toks)
         removed_toks: list[str] = []
         while len(self.vocab_trie.items(prefix=p_toks[-1])) > 1:
-            removed_toks.insert(0, p_toks.pop()) # NOTE: async mask logits for popped token?
+            removed_toks.insert(0, p_toks.pop()) # NOTE: async masking of logit per popped token?
+        # NOTE: https://github.com/guidance-ai/guidance/blob/5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
         return removed_toks
 
     def trim_falsy_toks(self, prompt_toks: list[str]) -> list[str]:
