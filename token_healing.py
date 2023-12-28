@@ -1,3 +1,5 @@
+from collections import deque
+from itertools import dropwhile
 from typing import Protocol
 from re import escape
 
@@ -20,10 +22,11 @@ class TokenBoundaryHealer:
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
-        prompt_toks = self.tokenizer.batch_decode(self.tokenizer(prompt)['input_ids'])
-        if removed_toks := self.trim_toks(prompt_toks):
-            prompt = prompt[: prompt.rindex(removed_toks[0])].rstrip()
-            for prefix in removed_toks:
+        input_ids = self.tokenizer(prompt)['input_ids']
+        prompt_toks = self.tokenizer.batch_decode(input_ids)
+        if tok_stack := self.pop_toks(prompt_toks):
+            prompt = prompt[: prompt.rindex(tok_stack[0])].rstrip()
+            while tok_stack:
                 # toks_to_suppress = [i for i, t in self.vocab.items() if not t.startswith(prefix)]
                 # model.greedy_search(generation_config=GenerationConfig(..., suppress_tokens=toks_to_suppress))
                 # OR
@@ -35,25 +38,22 @@ class TokenBoundaryHealer:
                 # https://huggingface.co/docs/transformers/main_classes/text_generation#transformers.GenerationMixin.greedy_search.example
                 # logits_processor = SuppressTokensLogitsProcessor
                 # model.greedy_search(input_ids, GenerationConfig(..., logits_processor=logits_processor))
+                prefix = f"{escape(tok_stack.popleft())}.*"
                 prompt += rgx_gen(
-                    self.model, f"{escape(prefix)}.*", max_tokens=1,
+                    self.model, prefix, max_tokens=1,
                     sampler=samplers.greedy # type: ignore[arg-type]
                 )(prompt)
         return prompt
         # NOTE: pattern should be "^{t}.*" but outlines.interegular doesn't support `^`
         # https://discord.com/channels/1182316225284554793/1182317824170020895/1188172732735701123
 
-    def trim_toks(self, prompt_toks: list[str]) -> list[str]:
-        p_toks = self.trim_falsy_toks(prompt_toks)
-        removed_toks: list[str] = []
-        while len(self.vocab_trie.items(prefix=p_toks[-1])) > 1:
-            removed_toks.insert(0, p_toks.pop()) # NOTE: async masking of logit per popped token?
+    def pop_toks(self, prompt_toks: list[str]) -> deque[str]:
+        p_toks = deque(dropwhile(lambda t: not t, reversed(prompt_toks)))
+        popped_tok_stack: deque[str] = deque()
+        while len(self.vocab_trie.items(prefix=p_toks[0])) > 1:
+            popped_tok_stack.appendleft(p_toks.popleft()) # NOTE: async logits mask per popped token
         # NOTE: https://github.com/guidance-ai/guidance/blob/5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
-        return removed_toks
-
-    def trim_falsy_toks(self, prompt_toks: list[str]) -> list[str]:
-        truthy_idx = next(i for i, t in enumerate(reversed(prompt_toks)) if t)
-        return prompt_toks[: -truthy_idx or None]
+        return popped_tok_stack
 
 # TODO: check if `GenerationConfig` params can help control generation instead of using outlines
 # https://huggingface.co/docs/transformers/main_classes/text_generation#transformers.GenerationConfig.suppress_tokens
