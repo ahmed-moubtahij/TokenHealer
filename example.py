@@ -1,11 +1,11 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
-
 from token_healing import TokenBoundaryHealer
 
 def generate(query, model, tokenizer, heal_prompt=False):
     if heal_prompt:
         token_healer = TokenBoundaryHealer(model, tokenizer)
         query = token_healer(query)
+        print(f"\nHEALED QUERY:\n{query}\n")
 
     prompt_template="""<|im_start|>system
     {system_message}<|im_end|>
