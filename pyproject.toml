@@ -29,6 +29,7 @@ module = "outlines"
 ignore_errors = true
 
 [tool.pylint]
+ignore = ["example.py"]
 disable = [
     "missing-module-docstring",
     "missing-class-docstring",

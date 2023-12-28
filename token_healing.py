@@ -21,12 +21,15 @@ class TokenBoundaryHealer:
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
-        input_ids = self.tokenizer(prompt).input_ids
+        input_ids = self.tokenizer(prompt)['input_ids']
         prompt_toks = self.tokenizer.batch_decode(input_ids)
         if tok_stack := self.pop_toks(prompt_toks):
-            prompt_ = prompt[: prompt.rindex(tok_stack[0])].rstrip()
+            trimmed_prompt = prompt[: prompt.rindex(tok_stack[0])].rstrip()
             vocab_ids = set(self.vocab_trie.itervalues())
-            prompt_ids = self.tokenizer(prompt_, return_tensors="pt").input_ids.to('cuda:0')
+            prompt_ids = self.tokenizer(
+                trimmed_prompt,
+                return_tensors='pt', # type: ignore
+            )['input_ids'].to('cuda:0') # type: ignore
             max_length_1 = MaxLengthCriteria(1)
             while tok_stack:
                 prefix = tok_stack.popleft()
@@ -39,9 +42,12 @@ class TokenBoundaryHealer:
                 )
                 # https://huggingface.co/docs/transformers/main/en/internal/generation_utils#transformers.SequenceBiasLogitsProcessor
                 # self.vocab_bias[prefix] = 100
-                # model.greedy_search(generation_config=GenerationConfig(..., sequence_bias=self.vocab_bias))
+                # self.model.greedy_search(sequence_bias=self.vocab_bias)
                 # self.vocab_bias[prefix] = -inf
-            prompt = self.tokenizer.batch_decode(prompt_ids, skip_special_tokens=True)[0]
+            prompt = self.tokenizer.batch_decode(
+                prompt_ids,
+                skip_special_tokens=True, # type: ignore
+            )[0]
         return prompt
 
     def pop_toks(self, prompt_toks: list[str]) -> deque[str]:
@@ -49,5 +55,7 @@ class TokenBoundaryHealer:
         popped_tok_stack: deque[str] = deque()
         while len(self.vocab_trie.keys(prefix=p_toks[0])) > 1:
             popped_tok_stack.appendleft(p_toks.popleft()) # TODO: async logits mask per popped token
-        # NOTE: https://github.com/guidance-ai/guidance/blob/5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
+        # Draw inspiration from torch.scatter:
+        # https://github.com/guidance-ai/guidance/blob/
+        # 5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
         return popped_tok_stack
