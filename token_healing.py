@@ -5,19 +5,21 @@ from transformers.generation import PrefixConstrainedLogitsProcessor, MaxLengthC
 from pygtrie import CharTrie
 
 class TokenBoundaryHealer:
+
     def __init__(self, model, tokenizer):
         self.model, self.tokenizer = model, tokenizer
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
         p_tok_ids = self.tokenizer(prompt)['input_ids']
-        prompt_toks = self.tokenizer.batch_decode(p_tok_ids)
-        if tok_stack := self.pop_toks(prompt_toks):
-            p = prompt[: prompt.rindex(tok_stack[0])].rstrip()
-            prompt_ids = self.tokenizer(p, return_tensors='pt').input_ids.cuda()
+        dead_toks, trimmed_prompt, extension_options = self.trim_prompt(p_tok_ids)
+        if dead_toks:
+            prompt_ids = self.tokenizer(
+                trimmed_prompt, return_tensors='pt'
+            ).input_ids.cuda()
             max_length_1 = MaxLengthCriteria(1)
-            while tok_stack:
-                prefix = tok_stack.popleft()
+            while dead_toks:
+                prefix = dead_toks.popleft()
                 logits_processor = PrefixConstrainedLogitsProcessor(
                     lambda *_: self.vocab_trie.values(prefix=prefix), #pyright: ignore
                     num_beams=1,
@@ -31,10 +33,17 @@ class TokenBoundaryHealer:
             prompt = self.tokenizer.batch_decode(prompt_ids, skip_special_tokens=True)[0]
         return prompt
 
-    def pop_toks(self, prompt_toks: list[str]) -> deque[str]:
-        p_toks = deque(dropwhile(lambda t: not t, reversed(prompt_toks)))
-        popped_tok_stack: deque[str] = deque()
-        # TODO: Re-use `self.vocab_trie.values(prefix=prefix)` it in __call__?
-        while len(self.vocab_trie.values(prefix=p_toks[0])) > 1:
-            popped_tok_stack.appendleft(p_toks.popleft())
-        return popped_tok_stack
+    def trim_prompt(self, tok_ids: list[int]) -> tuple[deque[str], str, deque[list[str]]]:
+        prompt_toks = self.tokenizer.batch_decode(tok_ids)
+        truthy_toks = dropwhile(lambda t: not t, reversed(prompt_toks))
+        p_toks = deque(truthy_toks); p_toks.reverse()
+
+        dead_toks: deque[str] = deque()
+        extension_options: deque[list[str]] = deque()
+        # TODO: Re-use `candidates` it in __call__
+        while len(options := self.vocab_trie.keys(prefix=p_toks[-1])) > 1:
+            dead_toks.appendleft(p_toks.pop())
+            extension_options.appendleft(options)
+
+        trimmed_prompt = self.tokenizer.decode(tok_ids[: -len(dead_toks)])
+        return dead_toks, trimmed_prompt, extension_options
