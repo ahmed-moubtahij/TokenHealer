@@ -39,5 +39,5 @@ class TokenBoundaryHealer:
             p_toks.pop()
             extension_options.appendleft(options)
 
-        trimmed_prompt = self.tokenizer.decode(tok_ids[: -len(extension_options)])
+        trimmed_prompt = self.tokenizer.decode(tok_ids[: -len(tail_toks_alts)], skip_special_tokens=True)
         return trimmed_prompt, extension_options
