@@ -1,12 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 from token_healing import TokenBoundaryHealer
 
-def generate(query, model, tokenizer, heal_prompt=False):
-    if heal_prompt:
-        token_healer = TokenBoundaryHealer(model, tokenizer)
-        query = token_healer(query)
-        print(f"\nHEALED QUERY:\n{query}\n")
-
+def generate(query, model, tokenizer):
     prompt_template="""<|im_start|>system
     {system_message}<|im_end|>
     <|im_start|>user
@@ -47,5 +42,8 @@ print(f"\nQUERY:\n{query}\n")
 # unguided_output = generate(query, model, tokenizer, heal_prompt=False)
 # print(f"UNGUIDED:\n{unguided_output}\n\n")
 
-guided_output = generate(query, model, tokenizer, heal_prompt=True)
-print(f"GUIDED:\n{guided_output}\n\n")
+token_healer = TokenBoundaryHealer(model, tokenizer)
+query = token_healer(query)
+print(f"\nHEALED QUERY:\n{query}\n")
+# guided_output = generate(query, model, tokenizer)
+# print(f"GUIDED:\n{guided_output}\n\n")

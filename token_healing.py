@@ -2,7 +2,7 @@ from collections import deque
 from itertools import dropwhile
 from typing import Protocol
 
-from transformers.generation import SuppressTokensLogitsProcessor, MaxLengthCriteria
+from transformers.generation import PrefixConstrainedLogitsProcessor, MaxLengthCriteria
 from pygtrie import CharTrie
 
 class Tokenizer(Protocol):
@@ -21,11 +21,10 @@ class TokenBoundaryHealer:
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
-        input_ids = self.tokenizer(prompt)['input_ids']
-        prompt_toks = self.tokenizer.batch_decode(input_ids)
+        prompt_tok_ids = self.tokenizer(prompt)['input_ids']
+        prompt_toks = self.tokenizer.batch_decode(prompt_tok_ids)
         if tok_stack := self.pop_toks(prompt_toks):
             trimmed_prompt = prompt[: prompt.rindex(tok_stack[0])].rstrip()
-            vocab_ids = set(self.vocab_trie.itervalues())
             prompt_ids = self.tokenizer(
                 trimmed_prompt,
                 return_tensors='pt', # type: ignore
@@ -33,17 +32,15 @@ class TokenBoundaryHealer:
             max_length_1 = MaxLengthCriteria(1)
             while tok_stack:
                 prefix = tok_stack.popleft()
-                toks_to_suppress = vocab_ids - set(self.vocab_trie.itervalues(prefix=prefix))
+                logits_processor = PrefixConstrainedLogitsProcessor(
+                    lambda *_: self.vocab_trie.values(prefix=prefix), num_beams=1,
+                )
                 prompt_ids = self.model.greedy_search(
                     prompt_ids,
-                    logits_processor=SuppressTokensLogitsProcessor(toks_to_suppress),
+                    logits_processor=logits_processor,
                     stopping_criteria=max_length_1,
                     pad_token_id=self.model.config.pad_token_id,
                 )
-                # https://huggingface.co/docs/transformers/main/en/internal/generation_utils#transformers.SequenceBiasLogitsProcessor
-                # self.vocab_bias[prefix] = 100
-                # self.model.greedy_search(sequence_bias=self.vocab_bias)
-                # self.vocab_bias[prefix] = -inf
             prompt = self.tokenizer.batch_decode(
                 prompt_ids,
                 skip_special_tokens=True, # type: ignore
@@ -53,9 +50,7 @@ class TokenBoundaryHealer:
     def pop_toks(self, prompt_toks: list[str]) -> deque[str]:
         p_toks = deque(dropwhile(lambda t: not t, reversed(prompt_toks)))
         popped_tok_stack: deque[str] = deque()
-        while len(self.vocab_trie.keys(prefix=p_toks[0])) > 1:
-            popped_tok_stack.appendleft(p_toks.popleft()) # TODO: async logits mask per popped token
-        # Draw inspiration from torch.scatter:
-        # https://github.com/guidance-ai/guidance/blob/
-        # 5f7fa7f6eef6455e6940fe743c5bfdb557330d0b/guidance/llms/_transformers.py#L412-L423
+        # TODO: Re-use `self.vocab_trie.values(prefix=prefix)` it in __call__?
+        while len(self.vocab_trie.values(prefix=p_toks[0])) > 1:
+            popped_tok_stack.appendleft(p_toks.popleft())
         return popped_tok_stack
