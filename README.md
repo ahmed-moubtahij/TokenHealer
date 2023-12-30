@@ -19,7 +19,7 @@
 <!-- ABOUT THE PROJECT -->
 ## What does this do?
 
-It rectifies the [token boundary bias](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38) in greedy tokenization.
+It rectifies the [token boundary bias](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38) in greedy tokenization. It's trimming and regrowing the prompt to better align with the model's tokenizer, thus enhancing generation quality. The positive impact is clearest with completion models.
 
 Example: given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` tells it that the next token is likely not `//`, because otherwise it would've seen `://`. As one can imagine, such errors compound in auto-regressive language models.
 
@@ -46,18 +46,18 @@ from token_healing import TokenBoundaryHealer
 
 prompt = 'The link is <a href="http:'
 
-output = generate(prompt, model, tokenizer)
+output = generate(prompt, completion_model, tokenizer)
 # The link is <a href="http:&#47;&#47;www&#47;dailymail&#
 
 # The model saw '://' as a single token in training. Seeing a prompt ending with `:` tells it that the
 # next token is likely not `//`, because otherwise it would've seen `://`.
 # Thus, it completes with a token other than `//`, in this case, `&`.
 
-token_healer = TokenBoundaryHealer(model, tokenizer)
+token_healer = TokenBoundaryHealer(completion_model, tokenizer)
 healed_prompt = token_healer(prompt)
 # The link is <a href="https://
 # Note that token healing also replaced `http` with `https`
-healed_output = generate(healed_prompt, model, tokenizer)
+healed_output = generate(healed_prompt, completion_model, tokenizer)
 # The link is <a href="https://www.365doki.com/post/3699
 ```
 

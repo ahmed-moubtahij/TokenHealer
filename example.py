@@ -11,7 +11,7 @@ def generate(prompt, model, tokenizer):
     return tokenizer.decode(output[0], skip_special_tokens=True)
 
 model_name_or_path = 'TheBloke/deepseek-llm-7B-base-GPTQ'
-model = AutoModelForCausalLM.from_pretrained(
+completion_model = AutoModelForCausalLM.from_pretrained(
     model_name_or_path,
     device_map='auto',
     trust_remote_code=False,
@@ -29,11 +29,11 @@ test_prompts = [
 prompt = test_prompts[0]
 print(f'\nOriginal prompt:\n{prompt}\n')
 
-output = generate(prompt, model, tokenizer)
+output = generate(prompt, completion_model, tokenizer)
 print(f'Generation with original prompt:\n{output}\n')
 
-token_healer = TokenBoundaryHealer(model, tokenizer)
+token_healer = TokenBoundaryHealer(completion_model, tokenizer)
 healed_prompt = token_healer(prompt)
 print(f'Healed prompt:\n{healed_prompt}\n')
-healed_output = generate(healed_prompt, model, tokenizer)
+healed_output = generate(healed_prompt, completion_model, tokenizer)
 print(f'Generation with healed prompt:\n{healed_output}\n')
