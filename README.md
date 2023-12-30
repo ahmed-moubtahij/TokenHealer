@@ -21,7 +21,7 @@
 
 It rectifies the [token boundary bias](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38) in greedy tokenization. It's trimming and regrowing the prompt to better align with the model's tokenizer, thus enhancing generation quality. The positive impact is clearest with completion models.
 
-Example: given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` tells it that the next token is likely not `//`, because otherwise it would've seen `://`. As one can imagine, such errors compound in auto-regressive language models.
+Example: given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` in the prompt tells it that the next token is not `//`, because otherwise it would've seen `://`. As one can imagine, such errors compound in auto-regressive language models.
 
 Debiasing token boundaries also addresses output sensitivity to prompts ending with whitespace.
 
@@ -34,7 +34,7 @@ Debiasing token boundaries also addresses output sensitivity to prompts ending w
 
 ## Installation
 
-`pip install .` should pick up the main dependencies from `pyproject.toml`, that is, `transformers="^4.36.2"` and `pygtrie="^2.5.0"`. You could also just copy-paste `token_healing.py` and install as needed.
+`pip install .` should pick up the main dependencies from `pyproject.toml`, that is, `transformers` and `pygtrie`. You could also just copy-paste `token_healing.py` and install as needed.
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
