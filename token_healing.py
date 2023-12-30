@@ -27,15 +27,14 @@ class TokenBoundaryHealer:
         return prompt
 
     def trim_prompt(self, prompt: str) -> tuple[str, list[list[int]]]:
-        prompt_tok_ids = self.encode(prompt, add_special_tokens=False)
-        prompt_toks = self.batch_decode(prompt_tok_ids)
+        encoded = self.tokenizer(prompt, add_special_tokens=False, return_offsets_mapping=True)
+        prompt_toks = self.batch_decode(encoded['input_ids'])
 
         tail_toks_extensions = ( # ids of e.g. ['.', ':'] -> [['.', '. '], [':', '://']]
-            self.vocab_trie.values(prefix=tail_tok) for tail_tok in reversed(prompt_toks)
-        ) # temporary reversing to use tail tokens for finding alternative tokens
+            self.vocab_trie.values(prefix=tail_tok.strip()) for tail_tok in reversed(prompt_toks)
+        ) # temporary reversing to target tail tokens for finding alternative tokens
         trimmed_toks_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
         trimmed_toks_alts.reverse()
 
-        trimmed_tok_ids = prompt_tok_ids[: -len(trimmed_toks_alts)]
-        trimmed_prompt = self.decode(trimmed_tok_ids, skip_special_tokens=True)
-        return trimmed_prompt, trimmed_toks_alts
+        last_trimmed_pos = encoded['offset_mapping'][-len(trimmed_toks_alts)][0]
+        return prompt[: last_trimmed_pos], trimmed_toks_alts
