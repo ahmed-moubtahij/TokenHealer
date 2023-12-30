@@ -16,7 +16,7 @@ class TokenBoundaryHealer:
         prompt_ids = self.encode(trimmed_prompt, return_tensors='pt').cuda()
         max_length_1 = MaxLengthCriteria(1)
         def logits_rule(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
-        for tok_alts in trimmed_toks_alts:
+        for tok_alts in reversed(trimmed_toks_alts): # regenerate last trimmed toks first
             prompt_ids = self.model.greedy_search(
                 prompt_ids,
                 logits_processor=logits_rule(lambda *_, allowed_toks=tok_alts: allowed_toks),
@@ -32,9 +32,8 @@ class TokenBoundaryHealer:
 
         tail_toks_extensions = ( # ids of e.g. ['.', ':'] -> [['.', '. '], [':', '://']]
             self.vocab_trie.values(prefix=tail_tok.strip()) for tail_tok in reversed(prompt_toks)
-        ) # temporary reversing to target tail tokens for finding alternative tokens
+        ) # querying contiguous tail tokens for alternative tokens
         trimmed_toks_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
-        trimmed_toks_alts.reverse()
 
         last_trimmed_pos = encoded['offset_mapping'][-len(trimmed_toks_alts)][0]
         return prompt[: last_trimmed_pos or None], trimmed_toks_alts
