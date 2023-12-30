@@ -37,4 +37,4 @@ class TokenBoundaryHealer:
         trimmed_toks_alts.reverse()
 
         last_trimmed_pos = encoded['offset_mapping'][-len(trimmed_toks_alts)][0]
-        return prompt[: last_trimmed_pos], trimmed_toks_alts
+        return prompt[: last_trimmed_pos or None], trimmed_toks_alts

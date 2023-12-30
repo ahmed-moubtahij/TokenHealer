@@ -49,11 +49,14 @@ prompt = 'The link is <a href="http:'
 output = generate(prompt, model, tokenizer)
 # The link is <a href="http:&#47;&#47;www&#47;dailymail&#
 
-# The model saw '://' as a single token in training. Seeing a prompt ending with `:` tells it that the next token is likely not `//`, because otherwise it would've seen `://`. Thus, it completes with a token other than `//`, in this case, `&`.
+# The model saw '://' as a single token in training. Seeing a prompt ending with `:` tells it that the
+# next token is likely not `//`, because otherwise it would've seen `://`.
+# Thus, it completes with a token other than `//`, in this case, `&`.
 
 token_healer = TokenBoundaryHealer(model, tokenizer)
 healed_prompt = token_healer(prompt)
 # The link is <a href="https://
+# Note that token healing also replaced `http` with `https`
 healed_output = generate(healed_prompt, model, tokenizer)
 # The link is <a href="https://www.365doki.com/post/3699
 ```
