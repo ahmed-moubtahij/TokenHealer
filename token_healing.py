@@ -12,6 +12,7 @@ class TokenBoundaryHealer:
 
     def __call__(self, prompt: str) -> str:
         trimmed_prompt, trimmed_toks_alts = self.trim_prompt(prompt)
+        if trimmed_prompt == prompt: return prompt
         prompt_ids = self.encode(trimmed_prompt, return_tensors='pt').cuda()
         max_length_1 = MaxLengthCriteria(1)
         def logits_rule(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
