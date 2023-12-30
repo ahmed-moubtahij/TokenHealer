@@ -10,7 +10,7 @@
 <!-- [![Contributors][contributors-shield]][contributors-url] -->
 <!-- [![Forks][forks-shield]][forks-url] -->
 <!-- [![Stargazers][stars-shield]][stars-url] -->
-[![Issues][issues-shield]][issues-url]
+<!-- [![Issues][issues-shield]][issues-url] -->
 <!-- [![MIT License][license-shield]][license-url] -->
 <!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
 
@@ -20,22 +20,23 @@
 ## What does this do?
 
 It rectifies the [token boundary bias](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38) in greedy tokenization.
-Example: Given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` tells it: "the next token is likely not `//`, otherwise the token would've been `://`".
-This includes the problem of output sensitivity to prompts ending with whitespace or punctuation.
+
+Example: given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` tells it that the next token is likely not `//`, because otherwise it would've seen `://`. As one can imagine, such errors compound in auto-regressive language models.
+
+Debiasing token boundaries also addresses output sensitivity to prompts ending with whitespace.
 
 <!-- REFERENCES -->
-## References
+<!-- ## References -->
 
-https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38
 
 <!-- GETTING STARTED -->
-## Getting Started
+<!-- ## Getting Started -->
 
-### Installation
+## Installation
 
-`pip install .` should pick up `[tool.poetry.dependencies]` from `pyproject.toml`, which are `transformers` and `pygtrie`.
+`pip install .` should pick up the main dependencies from `pyproject.toml`, that is, `transformers="^4.36.2"` and `pygtrie="^2.5.0"`. You could also just copy-paste `token_healing.py` and install as needed.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -43,15 +44,23 @@ https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-to
 ```py
 from token_healing import TokenBoundaryHealer
 
+prompt = 'The link is <a href="http:'
+
+output = generate(prompt, model, tokenizer)
+# The link is <a href="http:&#47;&#47;www&#47;dailymail&#
+
+# The model saw '://' as a single token in training. Seeing a prompt ending with `:` tells it that the next token is likely not `//`, because otherwise it would've seen `://`. Thus, it completes with a token other than `//`, in this case, `&`.
+
 token_healer = TokenBoundaryHealer(model, tokenizer)
-query = 'The link is <a href="http:'
-healed_query = token_healer(query)
-# The link is <a href="http://
+healed_prompt = token_healer(prompt)
+# The link is <a href="https://
+healed_output = generate(healed_prompt, model, tokenizer)
+# The link is <a href="https://www.365doki.com/post/3699
 ```
 
-See `example.py` for more detailed usage.
+See `example.py` for the full example.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 <!-- ROADMAP -->
 <!-- ## Roadmap
@@ -60,13 +69,13 @@ See `example.py` for more detailed usage.
 
 <!-- See the [open issues](https://github.com/Ayenem/TokenHealerissues) for a full list of proposed features (and known issues). -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request.
 
@@ -76,17 +85,15 @@ If you have a suggestion that would make this better, please fork the repo and c
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 <!-- LICENSE -->
-## License
+<!-- ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE.txt` for more information. -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 <!-- CONTACT -->
