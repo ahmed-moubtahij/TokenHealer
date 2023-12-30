@@ -10,6 +10,7 @@ packages = [{include = "token_healing"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 pygtrie = "^2.5.0"
+transformers = "^4.36.2"
 
 [tool.poetry.group.test.dependencies]
 auto-gptq = "^0.6.0"
@@ -19,7 +20,6 @@ optimum = "^1.16.1"
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
 pylint = "^3.0.3"
-pyright = "^1.1.342"
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -35,12 +35,10 @@ disable = [
     "missing-class-docstring",
     "missing-function-docstring",
     "invalid-name",
+    "multiple-statements",
 ]
-
-[tool.pyright]
-ignore = ["example.py"]
-reportPrivateImportUsage = false
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
