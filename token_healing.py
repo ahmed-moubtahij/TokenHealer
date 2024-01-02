@@ -15,11 +15,11 @@ class TokenBoundaryHealer:
         trimmed_prompt_ids, toks_alts = self.trim_prompt(prompt)
         if not toks_alts[0]: return prompt
         max_length_1 = MaxLengthCriteria(1)
-        def logits_rule(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
+        def allowed_toks(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
         for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
             trimmed_prompt_ids = self.model.greedy_search(
                 trimmed_prompt_ids,
-                logits_processor=logits_rule(lambda *_, allowed_toks=tok_alts: allowed_toks),
+                logits_processor=allowed_toks(lambda *_, alts=tok_alts: alts),
                 stopping_criteria=max_length_1,
                 pad_token_id=self.model.config.pad_token_id,
                 # use_cache=True,
