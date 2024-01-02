@@ -6,10 +6,8 @@ from pygtrie import CharTrie
 class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
-        self.model = model
-        self.vocab_trie, self.encode = CharTrie(tokenizer.get_vocab()), tokenizer.encode
-        self.decode, self.batch_decode = tokenizer.decode, tokenizer.batch_decode
-        self.batch_decode = tokenizer.batch_decode
+        self.encode, self.decode = tokenizer.encode, tokenizer.decode
+        self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
         trimmed_prompt_ids, toks_alts = self.trim_prompt(prompt)
@@ -29,7 +27,7 @@ class TokenBoundaryHealer:
 
     def trim_prompt(self, prompt: str) -> tuple[IntTensor, list[list[int]]]:
         prompt_ids = self.encode(prompt, return_tensors='pt').cuda()
-        prompt_toks = self.batch_decode(prompt_ids.squeeze())
+        prompt_toks = [*map(self.decode, prompt_ids.squeeze())]
 
         tail_toks_extensions = ( # ids of e.g. ['.', ':'] -> [['.', '. '], [':', '://']]
             self.vocab_trie.values(prefix=tail_tok.lstrip()) for tail_tok in reversed(prompt_toks)
