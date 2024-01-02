@@ -12,18 +12,19 @@ class TokenBoundaryHealer:
         self.batch_decode = tokenizer.batch_decode
 
     def __call__(self, prompt: str) -> str:
-        trimmed_prompt, trimmed_toks_alts = self.trim_prompt(prompt)
-        if not trimmed_toks_alts[0]: return prompt
+        trimmed_prompt_ids, toks_alts = self.trim_prompt(prompt)
+        if not toks_alts[0]: return prompt
         max_length_1 = MaxLengthCriteria(1)
         def logits_rule(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
-        for tok_alts in reversed(trimmed_toks_alts): # regenerate last trimmed toks first
-            trimmed_prompt = self.model.greedy_search(
-                trimmed_prompt,
+        for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
+            trimmed_prompt_ids = self.model.greedy_search(
+                trimmed_prompt_ids,
                 logits_processor=logits_rule(lambda *_, allowed_toks=tok_alts: allowed_toks),
                 stopping_criteria=max_length_1,
                 pad_token_id=self.model.config.pad_token_id,
+                # use_cache=True,
             )
-        healed_prompt = self.decode(trimmed_prompt.squeeze(), skip_special_tokens=True)
+        healed_prompt = self.decode(trimmed_prompt_ids.squeeze(), skip_special_tokens=True)
         return healed_prompt
 
     def trim_prompt(self, prompt: str) -> tuple[IntTensor, list[list[int]]]:
