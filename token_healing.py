@@ -6,23 +6,28 @@ from pygtrie import CharTrie
 class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
+        self.model, self.use_cache = model, model.config.use_cache
         self.encode, self.decode = tokenizer.encode, tokenizer.decode
         self.vocab_trie = CharTrie(tokenizer.get_vocab())
 
     def __call__(self, prompt: str) -> str:
-        trimmed_prompt_ids, toks_alts = self.trim_prompt(prompt)
+        left_ids, toks_alts = self.trim_prompt(prompt)
         if not toks_alts[0]: return prompt
-        max_length_1 = MaxLengthCriteria(1)
+        max_length_1, past_kv = MaxLengthCriteria(1), None
         def allowed_toks(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
         for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
-            trimmed_prompt_ids = self.model.greedy_search(
-                trimmed_prompt_ids,
+            left_ids = self.model.greedy_search(
+                left_ids,
                 logits_processor=allowed_toks(lambda *_, alts=tok_alts: alts),
                 stopping_criteria=max_length_1,
                 pad_token_id=self.model.config.pad_token_id,
-                # use_cache=True,
+                return_dict_in_generate=self.use_cache,
+                past_key_values=past_kv,
             )
-        healed_prompt = self.decode(trimmed_prompt_ids.squeeze(), skip_special_tokens=True)
+            if self.use_cache:
+                past_kv, left_ids = left_ids.past_key_values, left_ids.sequences
+
+        healed_prompt = self.decode(left_ids.squeeze(), skip_special_tokens=True)
         return healed_prompt
 
     def trim_prompt(self, prompt: str) -> tuple[IntTensor, list[list[int]]]:
