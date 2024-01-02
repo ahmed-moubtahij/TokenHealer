@@ -31,7 +31,7 @@ class TokenBoundaryHealer:
         prompt_toks = self.batch_decode(prompt_ids.squeeze())
 
         tail_toks_extensions = ( # ids of e.g. ['.', ':'] -> [['.', '. '], [':', '://']]
-            self.vocab_trie.values(prefix=tail_tok.strip()) for tail_tok in reversed(prompt_toks)
+            self.vocab_trie.values(prefix=tail_tok.lstrip()) for tail_tok in reversed(prompt_toks)
         ) # querying contiguous tail tokens for alternative tokens
         trimmed_toks_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
 
