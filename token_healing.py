@@ -6,9 +6,9 @@ from pygtrie import CharTrie
 class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
-        self.model, self.tokenizer = model, tokenizer
-        self.vocab_trie = CharTrie(tokenizer.get_vocab())
-        self.encode, self.decode = tokenizer.encode, tokenizer.decode
+        self.model = model
+        self.vocab_trie, self.encode = CharTrie(tokenizer.get_vocab()), tokenizer.encode
+        self.decode, self.batch_decode = tokenizer.decode, tokenizer.batch_decode
         self.batch_decode = tokenizer.batch_decode
 
     def __call__(self, prompt: str) -> str:
