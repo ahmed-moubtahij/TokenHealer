@@ -1,5 +1,6 @@
 from itertools import takewhile
 from transformers.generation import PrefixConstrainedLogitsProcessor, MaxLengthCriteria
+from torch import IntTensor
 from pygtrie import CharTrie
 
 class TokenBoundaryHealer:
@@ -12,28 +13,26 @@ class TokenBoundaryHealer:
 
     def __call__(self, prompt: str) -> str:
         trimmed_prompt, trimmed_toks_alts = self.trim_prompt(prompt)
-        if trimmed_prompt == prompt: return prompt
-        prompt_ids = self.encode(trimmed_prompt, return_tensors='pt').cuda()
+        if not trimmed_toks_alts[0]: return prompt
         max_length_1 = MaxLengthCriteria(1)
         def logits_rule(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
         for tok_alts in reversed(trimmed_toks_alts): # regenerate last trimmed toks first
-            prompt_ids = self.model.greedy_search(
-                prompt_ids,
+            trimmed_prompt = self.model.greedy_search(
+                trimmed_prompt,
                 logits_processor=logits_rule(lambda *_, allowed_toks=tok_alts: allowed_toks),
                 stopping_criteria=max_length_1,
                 pad_token_id=self.model.config.pad_token_id,
             )
-        prompt = self.batch_decode(prompt_ids, skip_special_tokens=True)[0]
-        return prompt
+        healed_prompt = self.decode(trimmed_prompt.squeeze(), skip_special_tokens=True)
+        return healed_prompt
 
-    def trim_prompt(self, prompt: str) -> tuple[str, list[list[int]]]:
-        encoded = self.tokenizer(prompt, add_special_tokens=False, return_offsets_mapping=True)
-        prompt_toks = self.batch_decode(encoded['input_ids'])
+    def trim_prompt(self, prompt: str) -> tuple[IntTensor, list[list[int]]]:
+        prompt_ids = self.encode(prompt, return_tensors='pt').cuda()
+        prompt_toks = self.batch_decode(prompt_ids.squeeze())
 
         tail_toks_extensions = ( # ids of e.g. ['.', ':'] -> [['.', '. '], [':', '://']]
             self.vocab_trie.values(prefix=tail_tok.strip()) for tail_tok in reversed(prompt_toks)
         ) # querying contiguous tail tokens for alternative tokens
         trimmed_toks_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
 
-        last_trimmed_pos = encoded['offset_mapping'][-len(trimmed_toks_alts)][0]
-        return prompt[: last_trimmed_pos or None], trimmed_toks_alts
+        return prompt_ids[:, : -len(trimmed_toks_alts) or None], trimmed_toks_alts
