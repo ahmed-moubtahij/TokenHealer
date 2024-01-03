@@ -13,7 +13,8 @@
 <!-- [![Issues][issues-shield]][issues-url] -->
 <!-- [![MIT License][license-shield]][license-url] -->
 <!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
-[![Lines of Code](https://tokei.rs/b1/github/Ayenem/TokenHealer?category=code)](https://github.com/Ayenem/TokenHealer/blob/main/token_healing.py)
+<!-- [![Lines of Code](https://tokei.rs/b1/github/Ayenem/TokenHealer/tree/main/)]() -->
+[![Lines of Code](https://tokei.rs/b1/github/Ayenem/TokenHealer?category=code)](https://github.com/Ayenem/TokenHealer)
 
 
 
