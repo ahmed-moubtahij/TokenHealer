@@ -6,27 +6,21 @@ from pygtrie import CharTrie
 class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
-        self.model, self.use_cache = model, model.config.use_cache
+        self.model, self.vocab_trie = model, CharTrie(tokenizer.get_vocab())
         self.encode, self.decode = tokenizer.encode, tokenizer.decode
-        self.vocab_trie = CharTrie(tokenizer.get_vocab())
+        self._max_length = MaxLengthCriteria(1)
 
     def __call__(self, prompt: str) -> str:
         left_ids, toks_alts = self.trim_prompt(prompt)
-        if not toks_alts[0]: return prompt
-        max_length_1, past_kv = MaxLengthCriteria(1), None
+        if not toks_alts: return prompt
         def allowed_toks(f): return PrefixConstrainedLogitsProcessor(f, num_beams=1)
         for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
             left_ids = self.model.greedy_search(
                 left_ids,
                 logits_processor=allowed_toks(lambda *_, alts=tok_alts: alts),
-                stopping_criteria=max_length_1,
+                stopping_criteria=self._max_length,
                 pad_token_id=self.model.config.pad_token_id,
-                return_dict_in_generate=self.use_cache,
-                past_key_values=past_kv,
             )
-            if self.use_cache:
-                past_kv, left_ids = left_ids.past_key_values, left_ids.sequences
-
         healed_prompt = self.decode(left_ids.squeeze(), skip_special_tokens=True)
         return healed_prompt
 
