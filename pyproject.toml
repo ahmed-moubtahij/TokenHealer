@@ -21,6 +21,9 @@ optimum = "^1.16.1"
 mypy = "^1.8.0"
 pylint = "^3.0.3"
 
+[tool.tokei]
+ignore = "example.py"
+
 [tool.mypy]
 ignore_missing_imports = true
 
