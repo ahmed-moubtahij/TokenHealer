@@ -18,13 +18,15 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## What does this do?
+## What is token healing?
 
-It rectifies the [token boundary bias](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38) in greedy tokenization. It's trimming and regrowing the prompt to better align with the model's tokenizer, thus enhancing generation quality. The positive impact is clearest with completion models.
+Token healing rectifies the token boundary bias in greedy tokenization. It does this by trimming and regrowing the prompt to better align with the model's tokenizer, thus enhancing generation quality. The improvement is clearest with completion models.
 
-Example: given a prompt with a partial url ending with `:`. The model might have seen the desired `://` as a single token in training, but seeing just `:` in the prompt tells it that the next token is not `//`, because otherwise it would've seen `://`. As one can imagine, such errors compound in auto-regressive language models.
+Example: given a completion prompt with a partial url ending with `:`, the model might have seen the expected completion `://` as a _single_ token in training. However, the prompt's tail token `:` tells it that the next token is not `//`, and so it looks for wrong completions. Such errors compound in auto-regressive language models.
 
 Debiasing token boundaries also addresses output sensitivity to prompts ending with whitespace.
+
+A more thorough explanation can be found on [The Art of Prompt Design: Prompt Boundaries and Token Healing | by Scott Lundberg](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38).
 
 <!-- REFERENCES -->
 <!-- ## References -->

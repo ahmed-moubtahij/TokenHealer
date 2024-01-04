@@ -9,7 +9,7 @@ class TokenBoundaryHealer:
     def __init__(self, model, tokenizer):
         self.model, self.vocab_trie = model, CharTrie(tokenizer.get_vocab())
         self.encode, self.decode = tokenizer.encode, tokenizer.decode
-        self._max_length = MaxLengthCriteria(1)
+        self.max_length_1 = MaxLengthCriteria(1)
 
     def __call__(self, prompt: str) -> str:
         prompt_ids = self.encode(prompt, return_tensors='pt').cuda()
@@ -33,7 +33,7 @@ class TokenBoundaryHealer:
             ids = self.model.greedy_search(
                 ids,
                 force_words_ids=[[tok_alts]],
-                stopping_criteria=self._max_length,
+                stopping_criteria=self.max_length_1,
                 pad_token_id=self.model.config.pad_token_id,
             )
         return ids
