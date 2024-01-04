@@ -1,7 +1,6 @@
 from itertools import takewhile
 
 from transformers.generation import MaxLengthCriteria
-from transformers.generation import PrefixConstrainedLogitsProcessor as AllowedToks
 from torch import IntTensor
 from pygtrie import CharTrie
 
@@ -33,7 +32,7 @@ class TokenBoundaryHealer:
         for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
             ids = self.model.greedy_search(
                 ids,
-                logits_processor=AllowedToks(lambda *_, alts=tok_alts: alts, 1),
+                force_words_ids=[[tok_alts]],
                 stopping_criteria=self._max_length,
                 pad_token_id=self.model.config.pad_token_id,
             )
