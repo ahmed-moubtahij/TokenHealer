@@ -28,8 +28,8 @@ class TokenBoundaryHealer:
         tail_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
         return tail_alts
 
-    def regenerate_tokens(self, ids: IntTensor, toks_alts: list[list[int]]) -> IntTensor:
-        for tok_alts in reversed(toks_alts): # regenerate last trimmed toks first
+    def regenerate_tokens(self, ids: IntTensor, tail_alts: list[list[int]]) -> IntTensor:
+        for tok_alts in reversed(tail_alts): # regenerate last trimmed toks first
             ids = self.model.greedy_search(
                 ids,
                 force_words_ids=[[tok_alts]],

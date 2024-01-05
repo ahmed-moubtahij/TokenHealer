@@ -21,6 +21,7 @@ completion_model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
 test_prompts = [
+    'The link is <a href="http',
     'The link is <a href="http:',
     'what is the DNS address ?! ',
     'I read a book about ',
