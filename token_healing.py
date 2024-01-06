@@ -33,21 +33,7 @@ class TokenBoundaryHealer:
         tail_alts = [*takewhile(lambda exts: len(exts) > 1, tail_toks_extensions)]
         return tail_alts
 
-    def regenerate_tokens(self, prompt_ids: IntTensor, toks_alts: list[list[int]]) -> IntTensor:
-        ids = prompt_ids[:, : -len(toks_alts) or None] # trim prompt ids
-        toks_to_sub = prompt_ids.squeeze()[-len(toks_alts): ].tolist()
-        for tok, tok_alts in zip(toks_to_sub, reversed(toks_alts)): # regenerate last trimmed toks first
-            sequence_bias = {(alt,): 0.0 for alt in tok_alts}
-            # sequence_bias[(tok,)] += 1/len(tok_alts)
-            # sequence_bias[(tok,)] += len(tok_alts)
-            sequence_bias[(tok,)] += float('inf')
-            # NOTE: Token ids might be misaligned with the model's logit indices
-            # NOTE: len(ids.scores[0].squeeze()) == self.model.config.vocab_size == 102400
-            #       so this should be the size of sequence_bias
-            ids = self.model.greedy_search(
-                ids,
-                sequence_bias = sequence_bias,
-                stopping_criteria=self.max_length_1,
+        ids = prompt_ids[:, : -len(alt_tok_ids)] # trim prompt ids
                 pad_token_id=self.model.config.pad_token_id,
                 # normalize_logits=True,
                 return_dict_in_generate=True,
