@@ -35,8 +35,7 @@ class TokenBoundaryHealer:
             ids = prompt_ids[:, : -n_alts] # trim prompt ids
         trimmed_toks = (e.item() for e in prompt_ids[0][-n_alts: ])
         generation_config = GenerationConfig(
-            max_new_tokens=1,
-            pad_token_id=self.model.config.pad_token_id,
+            max_new_tokens=1, pad_token_id=self.model.config.pad_token_id,
         )
         for trimmed_tok, tok_alts in zip(trimmed_toks, reversed(alt_tok_ids)):
             sequence_bias = {(tok,): 5.0 for tok in tok_alts}
