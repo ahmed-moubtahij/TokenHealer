@@ -26,7 +26,7 @@ test_prompts = [
     'I read a book about',
     'An example ["like this"] and another example [',
 ]
-prompt = test_prompts[1]
+prompt = test_prompts[0]
 print(f'\nOriginal prompt:\n{prompt}\n')
 
 # output = generate(prompt, completion_model, tokenizer)

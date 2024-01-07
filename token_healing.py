@@ -8,8 +8,9 @@ class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
         self.model, self.vocab = model, CharTrie(tokenizer.get_vocab())
-        self.space_tok = tokenizer.tokenize(' ')[0]
         self.encode, self.decode = tokenizer.encode, tokenizer.decode
+        self.space_tok, config = tokenizer.tokenize(' ')[0], self.model.config
+        self.bos_tok_id, self.pad_tok_id = config.bos_token_id, config.pad_token_id
 
     def __call__(self, prompt: str) -> str:
         prompt_ids = self.encode(prompt, add_special_tokens=False, return_tensors='pt').cuda()
@@ -30,13 +31,11 @@ class TokenBoundaryHealer:
     def regenerate_tokens(self, prompt_ids: Tensor, alt_tok_ids: list[list[int]]) -> Tensor:
         if not (n_alts := len(alt_tok_ids)): raise ValueError("Expecting alternative token ids")
         if n_alts == len(prompt_ids[0]): # start from bos if all prompt tokens have alternatives
-            ids = Tensor([[self.model.config.bos_token_id]]).to(int64).cuda()
+            ids = Tensor([[self.bos_tok_id]]).to(int64).cuda()
         else:
             ids = prompt_ids[:, : -n_alts] # trim prompt ids
         trimmed_toks = (e.item() for e in prompt_ids[0][-n_alts: ])
-        generation_config = GenerationConfig(
-            max_new_tokens=1, pad_token_id=self.model.config.pad_token_id,
-        )
+        generation_config = GenerationConfig(max_new_tokens=1, pad_token_id=self.pad_tok_id)
         for trimmed_tok, tok_alts in zip(trimmed_toks, reversed(alt_tok_ids)):
             sequence_bias = {(tok,): 5.0 for tok in tok_alts}
             sequence_bias[(trimmed_tok,)] += 1.0 # limit aggressive healing e.g. 'http'->'https'
