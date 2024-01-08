@@ -22,6 +22,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
 test_prompts = [
     'The link is <a href="http:',
+    '="http:', # test with complete replacement
     'I read a book about ',
     'I read a book about',
     'An example ["like this"] and another example [',
