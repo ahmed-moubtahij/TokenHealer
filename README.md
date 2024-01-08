@@ -60,7 +60,7 @@ token_healer = TokenBoundaryHealer(completion_model, tokenizer)
 healed_prompt = token_healer(prompt)
 # The link is <a href="http://
 healed_output = generate(healed_prompt, completion_model, tokenizer)
-# The link is <a href="https://www.365doki.com/post/3699
+# The link is <a href="http://www.365doki.com/post/3699
 ```
 
 See `example.py` for the full example.
