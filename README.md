@@ -58,8 +58,7 @@ output = generate(prompt, completion_model, tokenizer)
 
 token_healer = TokenBoundaryHealer(completion_model, tokenizer)
 healed_prompt = token_healer(prompt)
-# The link is <a href="https://
-# Note that token healing also replaced `http` with `https`
+# The link is <a href="http://
 healed_output = generate(healed_prompt, completion_model, tokenizer)
 # The link is <a href="https://www.365doki.com/post/3699
 ```
