@@ -20,7 +20,7 @@ class TokenBoundaryHealer:
         return prompt
 
     def get_tail_alts(self, prompt_ids: list[int]) -> list[list[int]]:
-        prompt_toks = [self.decode(t) for t in prompt_ids]
+        prompt_toks = [*map(self.decode, prompt_ids)]
         tail_toks_extensions = (
             self.vocab.values(prefix=tail_tok.replace(' ', self.space_tok))
             for tail_tok in reversed(prompt_toks)
