@@ -23,20 +23,20 @@ tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 test_prompts = [
     'The link is <a href="http:',
     'The link is <a href="http', # test aggressive healing http->https
-    '="http:', # test with complete replacement
-    'I read a book about ',
-    'I read a book about', # no-op case
+    'I read a book about ', # test trailing whitespace
+    'I read a book about', # test no-op
+    'I', # test single-token
     'An example ["like this"] and another example [',
 ]
-prompt = test_prompts[0]
-print(f'\nOriginal prompt:\n{prompt}\n')
+for prompt in test_prompts:
+    print(f'\nOriginal prompt:\n{prompt}\n')
 
-# output = generate(prompt, completion_model, tokenizer)
-# print(f'Generation with original prompt:\n{output}\n')
+    # output = generate(prompt, completion_model, tokenizer)
+    # print(f'Generation with original prompt:\n{output}\n')
 
-token_healer = TokenBoundaryHealer(completion_model, tokenizer)
-healed_prompt = token_healer(prompt)
-print(f'Healed prompt:\n{healed_prompt}\n')
+    token_healer = TokenBoundaryHealer(completion_model, tokenizer)
+    healed_prompt = token_healer(prompt)
+    print(f'Healed prompt:\n{healed_prompt}\n')
 
-# healed_output = generate(healed_prompt, completion_model, tokenizer)
-# print(f'Generation with healed prompt:\n{healed_output}\n')
+    # healed_output = generate(healed_prompt, completion_model, tokenizer)
+    # print(f'Generation with healed prompt:\n{healed_output}\n')
