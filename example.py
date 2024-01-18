@@ -4,8 +4,7 @@ from token_healing import TokenBoundaryHealer
 def generate(prompt, model, tokenizer):
     input_ids = tokenizer(prompt, return_tensors='pt').input_ids.cuda()
     generation_config = GenerationConfig(
-        temperature=0.7, do_sample=True, top_p=0.95, top_k=40, max_new_tokens=16,
-        pad_token_id=model.config.pad_token_id,
+        max_new_tokens=8, repetition_penalty=1.1, pad_token_id=model.config.pad_token_id,
     )
     output = model.generate(inputs=input_ids, generation_config=generation_config)
     return tokenizer.decode(output[0], skip_special_tokens=True)

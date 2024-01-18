@@ -9,7 +9,7 @@ class TokenBoundaryHealer:
         self.vocab, self.space_tok = CharTrie(t.get_vocab()), t.tokenize(' ')[0]
         self.encode, self.decode = t.encode, t.decode
         self.gen_cfg = GenerationConfig(
-            max_new_tokens=1, bos_token_id=t.bos_token_id, pad_token_id=t.pad_token_id
+            max_new_tokens=1, bos_token_id=t.bos_token_id, pad_token_id=t.pad_token_id,
         )
 
     def __call__(self, prompt: str) -> str:
