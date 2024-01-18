@@ -21,12 +21,13 @@ completion_model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
 test_prompts = [
+    'An example ["like this"] and another example [',
+    '', # test empty
     'The link is <a href="http:',
     'The link is <a href="http', # test aggressive healing http->https
     'I read a book about ', # test trailing whitespace
-    'I read a book about', # test no-op
+    'I read a book about', # test nothing to heal
     'I', # test single-token
-    'An example ["like this"] and another example [',
 ]
 for prompt in test_prompts:
     print(f'\nOriginal prompt:\n{prompt}\n')
