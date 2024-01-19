@@ -18,14 +18,20 @@ class TokenBoundaryHealer:
         # stripped before encoding to desensitize generation to whitespace artefacts
         prompt_ids = self.encode(prompt.strip(), add_special_tokens=False)
 
+        # tail token is used for a prefix search, thus, whitespaces are replaced with
+        # their tokenization to enable search for tokens prefixed with a whitespace
         tail_tok = self.decode(prompt_ids[-1]).replace(' ', self.space_tok)
-        seq_bias = {(alt_tok,): 10.0 for alt_tok in self.vocab.values(prefix=tail_tok)}
-        if not seq_bias: return prompt
 
-        seq_bias[(prompt_ids[-1],)] += 1.0 # limit aggressive healing e.g. 'http'->'https'
+        # apply bias for alternatives (extensions) to the tail token
+        seq_bias = {(alt_tok,): 10.0 for alt_tok in self.vocab.values(prefix=tail_tok)}
+        if not seq_bias: return prompt # skip if there are no token alternatives to heal with
+
+        # slightly favor original token to limit aggressive healing e.g. 'http' -> 'https'
+        seq_bias[(prompt_ids[-1],)] += 1.0
         self.gen_cfg.update(sequence_bias=seq_bias)
+
         if len(prompt_ids) > 1: trimmed_ids = Tensor([prompt_ids[: -1]]).to(int64).cuda()
-        else:                   trimmed_ids = None
+        else:                   trimmed_ids = None # prompt is a single token -> regen from bos
 
         healed_ids = self.model.generate(trimmed_ids, generation_config=self.gen_cfg)
         healed_prompt = self.decode(healed_ids.squeeze(), skip_special_tokens=True)

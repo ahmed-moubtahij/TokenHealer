@@ -31,12 +31,12 @@ test_prompts = [
 for prompt in test_prompts:
     print(f'\nOriginal prompt:\n{prompt}\n')
 
-    # output = generate(prompt, completion_model, tokenizer)
-    # print(f'Generation with original prompt:\n{output}\n')
+    output = generate(prompt, completion_model, tokenizer)
+    print(f'Generation with original prompt:\n{output}\n')
 
     token_healer = TokenBoundaryHealer(completion_model, tokenizer)
     healed_prompt = token_healer(prompt)
     print(f'Healed prompt:\n{healed_prompt}\n')
 
-    # healed_output = generate(healed_prompt, completion_model, tokenizer)
-    # print(f'Generation with healed prompt:\n{healed_output}\n')
+    healed_output = generate(healed_prompt, completion_model, tokenizer)
+    print(f'Generation with healed prompt:\n{healed_output}\n')
