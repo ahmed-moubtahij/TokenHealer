@@ -18,13 +18,13 @@ class TokenBoundaryHealer:
         # stripped before encoding to desensitize generation to whitespace artefacts
         prompt_ids = self.encode(prompt.strip(), add_special_tokens=False)
 
-        # tail token is used for a prefix search, thus, whitespaces are replaced with
-        # their tokenization to enable search for tokens prefixed with a whitespace
+        # tail token is used for a prefix search, thus, whitespaces are replaced with their
+        # tokenization (e.g. 'Ġ') to enable search for tokens prefixed with a whitespace
         tail_tok = self.decode(prompt_ids[-1]).replace(' ', self.space_tok)
 
         # apply bias for alternatives (extensions) to the tail token
         seq_bias = {(alt_tok,): 10.0 for alt_tok in self.vocab.values(prefix=tail_tok)}
-        if not seq_bias: return prompt # skip if there are no token alternatives to heal with
+        if len(seq_bias) == 1: return prompt # skip if there are no token alternatives to heal with
 
         # slightly favor original token to limit aggressive healing e.g. 'http' -> 'https'
         seq_bias[(prompt_ids[-1],)] += 1.0
