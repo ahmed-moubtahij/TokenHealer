@@ -24,8 +24,6 @@ Token healing rectifies the token boundary bias in greedy tokenization. It does 
 
 Example: given a completion prompt with a partial url ending with `:`, the model might have seen the expected completion `://` as a _single_ token in training. However, the prompt's tail token `:` tells it that the next token is not `//`, and so it looks for wrong completions. Such errors compound in auto-regressive language models.
 
-Debiasing token boundaries also addresses output sensitivity to prompts ending with whitespace.
-
 A more thorough explanation can be found on [The Art of Prompt Design: Prompt Boundaries and Token Healing | by Scott Lundberg](https://towardsdatascience.com/the-art-of-prompt-design-prompt-boundaries-and-token-healing-3b2448b0be38).
 
 <!-- REFERENCES -->
