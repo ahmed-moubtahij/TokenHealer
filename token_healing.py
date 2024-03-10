@@ -1,12 +1,12 @@
 from transformers.generation import GenerationConfig
 from torch import Tensor, int64
-from pygtrie import CharTrie
+from trie import Trie
 
 class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
         t, self.model = tokenizer, model
-        self.vocab, self.space_tok = CharTrie(t.get_vocab()), t.tokenize(' ')[0]
+        self.vocab, self.space_tok = Trie(t.get_vocab()), t.tokenize(' ')[0]
         self.encode, self.decode = t.encode, t.decode
         self.gen_cfg = GenerationConfig(
             max_new_tokens=1, bos_token_id=t.bos_token_id, pad_token_id=t.pad_token_id,

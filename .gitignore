@@ -1,3 +1,5 @@
 __pycache__/
 launch.json
 .vscode/
+.coverage
+htmlcov/

@@ -35,7 +35,7 @@ A more thorough explanation can be found on [The Art of Prompt Design: Prompt Bo
 
 ## Installation
 
-`pip install .` should pick up the main dependencies from `pyproject.toml`, that is, `transformers` and `pygtrie`. You could also just copy-paste `token_healing.py` and install as needed.
+The only dependency is `transformers`. `pip install .` should pick it up from `pyproject.toml`. You could also just copy-paste `token_healing.py` and install as needed.
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
