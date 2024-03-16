@@ -1,4 +1,6 @@
-"""Minimalistic trie implementation focusing on prefix search."""
+"""Minimalistic trie implementation focusing on prefix search.
+Adapted from https://github.com/google/pygtrie
+"""
 
 class Node:
     def __init__(self):
