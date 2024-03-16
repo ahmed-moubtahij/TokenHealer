@@ -9,9 +9,9 @@ class Trie:
     def __init__(self, *args):
         self.root = Node()
         for key, value in dict(*args).items():
-            self._setitem__(key, value)
+            self[key] = value
 
-    def _setitem__(self, key, value):
+    def __setitem__(self, key, value):
         """Set the value at the node for the given key."""
         node = self.root
         for char in key:
@@ -25,7 +25,7 @@ class Trie:
             values.extend(self._collect_values(child))
         return values
 
-    def values(self, prefix):
+    def extensions(self, prefix):
         """Retrieve values starting with a given prefix."""
         node = self.root
         for char in prefix:
