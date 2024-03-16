@@ -1,7 +1,8 @@
-# TODO: think of replacing this with with the tests you wrote for HF
+# TODO: Replace this with the tests you wrote for HF
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
-from token_healing import TokenBoundaryHealer
+
+from tokenhealing import TokenBoundaryHealer
 
 def generate(prompt, model, tokenizer):
     input_ids = tokenizer(prompt, return_tensors='pt').input_ids.cuda()

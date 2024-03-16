@@ -1,6 +1,7 @@
 from transformers.generation import GenerationConfig
 from torch import Tensor, int64
-from trie import Trie
+
+from tokenhealing.trie import Trie
 
 class TokenBoundaryHealer:
 
@@ -24,7 +25,8 @@ class TokenBoundaryHealer:
 
         # apply bias for alternatives (extensions) to the tail token
         seq_bias = {(alt_tok,): 10.0 for alt_tok in self.vocab.values(prefix=tail_tok)}
-        if len(seq_bias) == 1: return prompt # skip if there are no token alternatives to heal with
+        if not seq_bias or len(seq_bias) == 1:
+            return prompt # skip if there are no token alternatives to heal with
 
         # slightly favor original token to limit aggressive healing e.g. 'http' -> 'https'
         seq_bias[(prompt_ids[-1],)] += 1.0
