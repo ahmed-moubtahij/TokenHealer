@@ -56,7 +56,6 @@ class _Node:
         self.children = _EMPTY
         self.value = _EMPTY
 
-    # def iterate(self, path, shallow, iteritems):
     def iterate(self, path, shallow, items):
         node = self
         stack = []
@@ -64,7 +63,6 @@ class _Node:
             if node.value is not _EMPTY:
                 yield path, node.value
             if (not shallow or node.value is _EMPTY) and node.children:
-                # stack.append(iter(iteritems(node.children)))
                 stack.append(iter(items(node.children)))
                 path.append(None)
             while True:
@@ -102,8 +100,6 @@ class Trie(MutableMapping):
             node.value = value
         return node
 
-    def __iter__(self):
-        return self.iterkeys()
 
     def itervalues(self, prefix=_EMPTY, shallow=False):
         node, _ = self._get_node(prefix)
@@ -123,41 +119,15 @@ class Trie(MutableMapping):
         """
         return list(self.itervalues(prefix=prefix, shallow=shallow))
 
-    def __len__(self):
-        return sum(1 for _ in self.itervalues())
 
     def _path_from_key(self, key):
         return key if key is not _EMPTY else ()
 
-    def __getitem__(self, key):
-        node, _ = self._get_node(key)
-        if node.value is _EMPTY:
-            raise ShortKeyError(key)
-        return node.value
-
     def __setitem__(self, key, value):
         self._set_node(key, value)
 
-    def __delitem__(self, key):
-        node, trace = self._get_node(key)
-        if node.value is _EMPTY:
-            raise ShortKeyError(key)
-        node.value = _EMPTY
-        # Cleanup logic to remove empty nodes could be added here
-
-    def iterkeys(self):
-        return (key for key, _ in self.iterate())
-
-    def iterate(self, prefix=_EMPTY, shallow=False):
-        """Iterates over the trie, yielding keys and values.
-
-        Args:
-            prefix: The prefix to limit the keys returned.
-            shallow: If True, stops descending in the trie once a value is found.
-
-        Yields:
-            Tuples of (key, value) for each entry in the trie that matches the prefix.
-        """
-        node, _ = self._get_node(prefix) if prefix is not _EMPTY else (self._root, [])
-        for path, value in node.iterate(list(self._path_from_key(prefix)), shallow, lambda x: x.items()):
-            yield ''.join(path), value
+    # Following methods aren't called but needed to conform with the MutableMapping base class
+    def __len__(self): raise NotImplementedError
+    def __iter__(self): raise NotImplementedError
+    def __getitem__(self, key): raise NotImplementedError
+    def __delitem__(self, key): raise NotImplementedError
