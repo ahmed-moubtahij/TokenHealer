@@ -1,5 +1,3 @@
-# TODO: Replace this with the tests you wrote for HF
-
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 
 from tokenhealing import TokenBoundaryHealer
@@ -22,24 +20,15 @@ completion_model = AutoModelForCausalLM.from_pretrained(
 )
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
-test_prompts = [
-    'An example ["like this"] and another example [',
-    '', # test empty
-    'The link is <a href="http:',
-    'The link is <a href="http', # test aggressive healing http->https
-    'I read a book about ', # test trailing whitespace
-    'I read a book about', # test nothing to heal
-    'I', # test single-token
-]
-for prompt in test_prompts:
-    print(f'\nOriginal prompt:\n{prompt}\n')
+prompt = 'The link is <a href="http:'
+print(f'\nOriginal prompt:\n{prompt}\n')
 
-    output = generate(prompt, completion_model, tokenizer)
-    print(f'Generation with original prompt:\n{output}\n')
+output = generate(prompt, completion_model, tokenizer)
+print(f'Generation with original prompt:\n{output}\n')
 
-    token_healer = TokenBoundaryHealer(completion_model, tokenizer)
-    healed_prompt = token_healer(prompt)
-    print(f'Healed prompt:\n{healed_prompt}\n')
+token_healer = TokenBoundaryHealer(completion_model, tokenizer)
+healed_prompt = token_healer(prompt)
+print(f'Healed prompt:\n{healed_prompt}\n')
 
-    healed_output = generate(healed_prompt, completion_model, tokenizer)
-    print(f'Generation with healed prompt:\n{healed_output}\n')
+healed_output = generate(healed_prompt, completion_model, tokenizer)
+print(f'Generation with healed prompt:\n{healed_output}\n')
