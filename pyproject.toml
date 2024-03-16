@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "token-healing"
+name = "tokenhealing"
 version = "0.1.0"
 description = ""
 authors = ["Ahmed Moubtahij"]
 license = "Apache-2.0"
 readme = "README.md"
-packages = [{include = "token_healing"}]
+packages = [{include = "tokenhealing"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -15,6 +15,7 @@ transformers = "^4.36.2"
 auto-gptq = "^0.6.0"
 protobuf = "^4.25.1"
 optimum = "^1.16.1"
+parameterized = "^0.9.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
@@ -31,6 +32,7 @@ disable = [
     "missing-function-docstring",
     "invalid-name",
     "multiple-statements",
+    "too-few-public-methods",
 ]
 
 [build-system]

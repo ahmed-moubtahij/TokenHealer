@@ -31,8 +31,8 @@ class TokenHealingTestCase(unittest.TestCase):
             ("empty_prompt", "", ""),
         ]
     )
-    def test_prompts(self, test_name, input, expected):
-        healed_prompt = self.token_healer(input)
+    def test_prompts(self, test_name, prompt, expected):
+        healed_prompt = self.token_healer(prompt)
         self.assertEqual(healed_prompt, expected, f"Failed test: {test_name}")
 
 if __name__ == '__main__':
