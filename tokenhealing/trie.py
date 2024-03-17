@@ -2,7 +2,8 @@
 
 class Node:
     def __init__(self):
-        self.children, self.value = {}, None
+        self.value = None
+        self.children: dict[str, Node] = {}
 
 class Trie:
     def __init__(self, *args, **kwargs):
@@ -21,14 +22,14 @@ class Trie:
             crawler = crawler.children.setdefault(char, Node())
         crawler.value = value
 
-    def extensions(self, prefix):
+    def extensions(self, prefix: str) -> list:
         """Retrieve values starting with a given prefix."""
         crawler = self.root
         for char in prefix:
             crawler = crawler.children[char]
         return self._collect_values(crawler)
 
-    def _collect_values(self, node):
+    def _collect_values(self, node: Node) -> list:
         """Recursively collect all values under the given node."""
         values = [] if node.value is None else [node.value]
         for child in node.children.values():
