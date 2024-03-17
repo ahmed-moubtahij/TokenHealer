@@ -1,13 +1,8 @@
 """Minimalistic trie implementation focusing on prefix search. """
 
-class Node:
-    def __init__(self):
-        self.value = None
-        self.children: dict[str, Node] = {}
-
 class Trie:
     def __init__(self, *args, **kwargs):
-        self.root = Node()
+        self.root = {}
         self.update(*args, **kwargs)
 
     def update(self, *args, **kwargs):
@@ -19,19 +14,20 @@ class Trie:
         """Set the value at the node for the given key."""
         crawler = self.root
         for char in key:
-            crawler = crawler.children.setdefault(char, Node())
-        crawler.value = value
+            crawler = crawler.setdefault(char, {})
+        crawler['value'] = value
 
     def extensions(self, prefix: str) -> list:
         """Retrieve values starting with a given prefix."""
         crawler = self.root
         for char in prefix:
-            crawler = crawler.children[char]
+            crawler = crawler[char]
         return self._collect_values(crawler)
 
-    def _collect_values(self, node: Node) -> list:
+    def _collect_values(self, node: dict) -> list:
         """Recursively collect all values under the given node."""
-        values = [] if node.value is None else [node.value]
-        for child in node.children.values():
-            values.extend(self._collect_values(child))
+        values = [node['value']] if 'value' in node else []
+        for child in node.values():
+            if isinstance(child, dict):
+                values.extend(self._collect_values(child))
         return values
