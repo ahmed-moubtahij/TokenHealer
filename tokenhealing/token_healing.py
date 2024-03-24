@@ -7,10 +7,8 @@ class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
         t, self.model = tokenizer, model
-        self.ids_to_tokens = t.convert_ids_to_tokens
+        self.vocab, self.space_tok = Trie(t.get_vocab()), t.tokenize(' ')[0]
         self.tokens_to_ids = t.convert_tokens_to_ids
-        self.space_tok = t.tokenize(' ')[0]
-        self.vocab = Trie(t.get_vocab())
         self.encode, self.decode = t.encode, t.decode
         self.gen_cfg = GenerationConfig(
             max_new_tokens=1, bos_token_id=t.bos_token_id, pad_token_id=t.pad_token_id,
