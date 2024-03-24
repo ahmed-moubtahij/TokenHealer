@@ -27,12 +27,7 @@ class TokenBoundaryHealer:
         tail_tok = self.decode(prompt_ids[-1]).replace(' ', self.space_tok)
 
         alt_tokens = self.vocab.extensions(tail_tok)
-        # NOTE: Simulating returned tokens (not ids) from Trie
-        # This works -> you can use HF's id-unaware Trie
         alt_ids = self.tokens_to_ids(alt_tokens)
-
-        # alt_ids = self.vocab.extensions(tail_tok)
-        # TODO: check what self.ids_to_tokens(alt_ids) looks like and imitate that in the new Trie' ret
 
         seq_bias = {(alt_id,): 10.0 for alt_id in alt_ids}
 
