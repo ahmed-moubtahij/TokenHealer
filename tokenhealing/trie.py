@@ -7,7 +7,7 @@ class Trie:
     def __init__(self, *args):
         self.data = {}
         self._tokens = set()
-        self._termination = ""
+        self._termination_char = ""
         self.update(*args)
 
     def update(self, *args):
@@ -17,7 +17,7 @@ class Trie:
     def add(self, word: str):
         """
         Passes over every char (utf-8 char) on word and recursively adds it to the internal `data` trie representation.
-        The special key `""` in `self._termination` is used to represent termination.
+        The special key `""` in `self._termination_char` is used to represent termination.
 
         This function is idempotent, adding twice the same word will leave the trie unchanged
 
@@ -43,7 +43,7 @@ class Trie:
         for char in word:
             ref[char] = ref.setdefault(char, {})
             ref = ref[char]
-        ref[self._termination] = 1
+        ref[self._termination_char] = 1
 
     def extensions(self, prefix: str):
         """
@@ -89,10 +89,9 @@ class Trie:
         Returns:
             list: List of tokens generated from the given node.
         """
-        tokens = [self._termination] if self._termination in node else []
+        tokens = [self._termination_char] if self._termination_char in node else []
         for token, subtrie_head in node.items():
-            if token != self._termination:
-                tokens.extend(
-                    [token + subtoken for subtoken in self._collect_tokens(subtrie_head)]
-                )
+            if token != self._termination_char:
+                subtokens = self._collect_tokens(subtrie_head)
+                tokens.extend([token + subtoken for subtoken in subtokens])
         return tokens

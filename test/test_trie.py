@@ -5,12 +5,11 @@ class TestTrie(unittest.TestCase):
     def setUp(self):
         self.trie = Trie()
 
-    def test_insert_and_search(self):
-        # Test insertion and search for a single key-value pair
-        self.trie.add('moo')
-        self.assertEqual(self.trie.extensions('moo'), ['moo'])
+    def test_add(self):
+        self.trie.add("Hello")
+        self.assertEqual(self.trie.data, {"H": {"e": {"l": {"l": {"o": {"": 1}}}}}})
 
-    def test_prefix_search(self):
+    def test_extensions(self):
         # Test searching by prefix
         self.trie.add('foo')
         self.trie.add('food')
@@ -28,7 +27,7 @@ class TestTrie(unittest.TestCase):
         self.trie.add('bye')
         self.assertEqual(self.trie.extensions(''), ['hello', 'bye'])
 
-    def test_no_match(self):
+    def test_no_extension_match(self):
         # Test searching for a prefix that doesn't match any key
         with self.assertRaises(KeyError):
             self.trie.extensions('unknown')
