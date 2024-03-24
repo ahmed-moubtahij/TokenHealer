@@ -7,7 +7,10 @@ class TokenBoundaryHealer:
 
     def __init__(self, model, tokenizer):
         t, self.model = tokenizer, model
-        self.vocab, self.space_tok = Trie(t.get_vocab()), t.tokenize(' ')[0]
+        self.ids_to_tokens = t.convert_ids_to_tokens
+        self.tokens_to_ids = t.convert_tokens_to_ids
+        self.space_tok = t.tokenize(' ')[0]
+        self.vocab = Trie(t.get_vocab())
         self.encode, self.decode = t.encode, t.decode
         self.gen_cfg = GenerationConfig(
             max_new_tokens=1, bos_token_id=t.bos_token_id, pad_token_id=t.pad_token_id,
@@ -23,8 +26,17 @@ class TokenBoundaryHealer:
         # tokenization (e.g. 'Ġ') to enable search for tokens prefixed with a whitespace
         tail_tok = self.decode(prompt_ids[-1]).replace(' ', self.space_tok)
 
+        alt_tokens = self.vocab.extensions(tail_tok)
+        # NOTE: Simulating returned tokens (not ids) from Trie
+        # This works -> you can use HF's id-unaware Trie
+        alt_ids = self.tokens_to_ids(alt_tokens)
+
+        # alt_ids = self.vocab.extensions(tail_tok)
+        # TODO: check what self.ids_to_tokens(alt_ids) looks like and imitate that in the new Trie' ret
+
+        seq_bias = {(alt_id,): 10.0 for alt_id in alt_ids}
+
         # apply bias on token id alternatives, i.e., extensions of the tail token
-        seq_bias = {(alt_tok,): 10.0 for alt_tok in self.vocab.extensions(tail_tok)}
         if len(seq_bias) == 1:
             return prompt # skip if there are no token alternatives to heal with
 

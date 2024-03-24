@@ -1,33 +1,67 @@
-"""Minimalistic trie implementation focusing on prefix search. """
+""" Testing/modifying HF's token-id-unaware Trie """
 
 class Trie:
-    def __init__(self, *args, **kwargs):
-        self.root = {}
-        self.update(*args, **kwargs)
+    """
+    Trie in Python. Creates a Trie out of a list of words. The trie is used to split on `added_tokens` in one pass
+    Loose reference https://en.wikipedia.org/wiki/Trie
+    """
 
-    def update(self, *args, **kwargs):
-        """Update the trie with key-value pairs."""
-        for k, v in dict(*args, **kwargs).items():
-            self[k] = v
+    def __init__(self, *args):
+        self.data = {}
+        self._tokens = set()
+        self.update(*args)
 
-    def __setitem__(self, key, value):
-        """Set the value at the node for the given key."""
-        crawler = self.root
-        for char in key:
-            crawler = crawler.setdefault(char, {})
-        crawler['value'] = value
+    def update(self, *args):
+        for token in tuple(*args):
+            self.add(token)
 
-    def extensions(self, prefix: str) -> list:
-        """Retrieve values starting with a given prefix."""
-        crawler = self.root
+    def add(self, word: str):
+        """
+        Passes over every char (utf-8 char) on word and recursively adds it to the internal `data` trie representation.
+        The special key `""` is used to represent termination.
+
+        This function is idempotent, adding twice the same word will leave the trie unchanged
+
+        Example:
+
+        ```python
+        >>> trie = Trie()
+        >>> trie.add("Hello 友達")
+        >>> trie.data
+        {"H": {"e": {"l": {"l": {"o": {" ": {"友": {"達": {"": 1}}}}}}}}}
+
+        >>> trie.add("Hello")
+        >>> trie.data
+        {"H": {"e": {"l": {"l": {"o": {"": 1, " ": {"友": {"達": {"": 1}}}}}}}}}
+        ```
+        """
+        if not word:
+            # Prevent empty string
+            return
+
+        self._tokens.add(word)
+        ref = self.data
+        for char in word:
+            ref[char] = char in ref and ref[char] or {}
+            # ref[char] = ref.setdefault(char, {}) # NOTE: run tests with this instead
+            ref = ref[char]
+        ref[""] = 1
+
+    def extensions(self, prefix: str):
+        """Retrieve tokens starting with a given prefix."""
+        prefix_node = self.data
         for char in prefix:
-            crawler = crawler[char]
-        return self._collect_values(crawler)
+            prefix_node = prefix_node[char]
+        ret = self._collect_tokens(prefix_node)
+        ret = [prefix + token for token in ret]
+        return ret
 
-    def _collect_values(self, node: dict) -> list:
-        """Recursively collect all values under the given node."""
-        values = [node['value']] if 'value' in node else []
-        for child in node.values():
-            if isinstance(child, dict):
-                values.extend(self._collect_values(child))
-        return values
+    def _collect_tokens(self, node: dict) -> list:
+        """Recursively collect all tokens under the given node."""
+        tokens = [""] if "" in node else []
+        for token, subtrie_head in node.items():
+            if token != "":
+                tokens.extend(
+                    [token + subtoken for subtoken in self._collect_tokens(subtrie_head)]
+                )
+        return tokens
