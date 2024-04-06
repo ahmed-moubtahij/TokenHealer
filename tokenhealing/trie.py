@@ -11,6 +11,12 @@ class Trie:
         self.update(*args)
 
     def update(self, *args):
+        """
+        Updates the Trie with new tokens provided as arguments.
+
+        Args:
+            *args: Variable number of words to be added to the Trie.
+        """
         for token in tuple(*args):
             self.add(token)
 
