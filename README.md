@@ -35,7 +35,7 @@ A more thorough explanation can be found on [The Art of Prompt Design: Prompt Bo
 
 ## Installation
 
-The only dependency is `transformers`. `pip install .` should pick it up from `pyproject.toml`. You could also just copy-paste `token_healing.py` and install as needed.
+The only dependency is `transformers`. `pip install transformrs` or `pip install .` should pick it up from `pyproject.toml`.
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
