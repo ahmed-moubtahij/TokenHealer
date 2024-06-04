@@ -102,7 +102,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information. -->
 <!-- CONTACT -->
 ## Contact
 
-Ahmed Moubtahij - [@ahmed_moubtahij](https://twitter.com/TheAyenem)
+[@ahmed_moubtahij]([https://twitter.com/TheAyenem](https://twitter.com/ahmed_moubtahij))
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
