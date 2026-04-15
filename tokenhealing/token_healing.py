@@ -29,6 +29,7 @@ class TokenBoundaryHealer:
 
         # slightly favor original token to limit aggressive healing e.g. 'http' -> 'https'
         seq_bias[(prompt_ids[-1],)] += 1.0
+        
         self.gen_cfg.update(sequence_bias=seq_bias)
 
         if len(prompt_ids) > 1: trimmed_ids = Tensor([prompt_ids[: -1]]).to(int64).cuda()
