@@ -16,8 +16,6 @@ class TokenBoundaryHealer:
 
     def __call__(self, prompt: str) -> str:
         if not prompt: return prompt
-        # assumption: leading/trailing whitespace is not meaningful, so the prompt is
-        # stripped before encoding to desensitize generation to whitespace artefacts
         prompt_ids = self.encode(prompt.strip(), add_special_tokens=False)
 
         # tail token is used for a prefix search, thus, whitespaces are replaced with their
